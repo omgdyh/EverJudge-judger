@@ -18,8 +18,8 @@
         - .json
     - source
       - 1
-      - A+1.cpp
-      - A+1.exe (complied)
+        - A+1.cpp
+        - A+1.exe (complied)
     - result
         - 1
           x.ans
