@@ -17,6 +17,10 @@ std::string get_string(std::initializer_list<std::string> multis) {
     return res;
 }
 
+void run_task(std::string cmd) {
+    std::system(cmd.c_str());
+}
+
 int main(int argv, const char * args[]) {
     if (argv != 3) {
         std::cout << "invalid input." << std::endl;
