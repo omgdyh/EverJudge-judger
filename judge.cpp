@@ -9,6 +9,11 @@
 
 using json = nlohmann::json;
 
+struct mission {
+    std::future_status status;
+    std::string id;
+};
+
 std::string get_string(std::initializer_list<std::string> multis) {
     std::string res = "";
     for (auto __s : multis) {
@@ -71,31 +76,41 @@ int main(int argv, const char * args[]) {
 
     std::cout << "[JUDGE] test cases: " << test_cases << ", time limit: " << time_limit << " (ms)" << std::endl;
 
+    std::vector<mission> que;
+
     for (int i = 1; i <= test_cases; i++) {
         std::string run = get_string({file, ".exe < ", data, std::to_string(i), ".in > ", result, id, "\\", std::to_string(i), ".out"});
-        std::string fc = get_string({"fc ", data, std::to_string(i), ".ans ", result, id, "\\", std::to_string(i), ".out"});
         
         std::future<void> task = std::async(run_task, run);
         std::future_status status = task.wait_for(std::chrono::milliseconds(time_limit));
-        do {
+        que.push_back({task.wait_for(std::chrono::milliseconds(time_limit)), std::to_string(i)});
+    }
+    
+    while (que.size()) {
+        for (int x = 0; x < que.size(); x ++) {
+            mission tmp_mission = que[x];
+            std::future_status status = tmp_mission.status;
+            std::string i = tmp_mission.id;
             if (status == std::future_status::timeout) {
-                R[id][std::to_string(i)] = "TLE";
+                R[id][i] = "TLE";
                 TLE = true;
                 AC = false;
-                break;
+                que.erase(que.begin() + x);
             }
-            if (status == std::future_status::ready) {
+            else if (status == std::future_status::ready) {
+                std::string fc = get_string({".\\checker\\fulltext ", data, i, ".ans ", result, id, "\\", i, ".out"});
                 if (system(fc.c_str())) {
-                    R[id][std::to_string(i)] = "WA";
+                    R[id][i] = "WA";
                     AC = false;
                     WA = true;
                 } else {
-                    R[id][std::to_string(i)] = "AC";
+                    R[id][i] = "AC";
                 }
-                break;
+                que.erase(que.begin() + x);
             }
-        } while (status != std::future_status::ready);
-    } if (WA == 1) {
+        }
+    }
+    if (WA == 1) {
         R[id]["total"] = "WA";
     } if (TLE == 1) {
         R[id]["total"] = "TLE";
